@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import click
-import re
+import texttable
 
 @click.command()
 def collate():
@@ -34,12 +34,12 @@ def collate():
         for indx2, in_text2 in enumerate(in_texts_2):
             
             if in_text1  ==  in_text2:
-                if is_match_texts_1[indx1]:
+                if not is_match_texts_1[indx1]:
                     # New
                     result_lines.append({
                         'left_index': indx1,
                         'left_value': in_text1,
-                        'right_indx': indx2,
+                        'right_index': indx2,
                         'right_value': in_text2,
                         'result': 'Same'})
                 else:
@@ -47,9 +47,9 @@ def collate():
                     result_lines.append({
                         'left_index': '',
                         'left_value': '',
-                        'right_indx': indx2,
+                        'right_index': indx2,
                         'right_value': in_text2,
-                        'result': 'SameDuplicated(left:{}'.format(indx1)})
+                        'result': 'SameDuplicated(left:{})'.format(indx1)})
 
                 is_match_texts_1[indx1] = True
                 is_match_texts_2[indx2] = True
@@ -59,23 +59,40 @@ def collate():
             result_lines.append({
                 'left_index': indx1,
                 'left_value': in_text1,
-                'right_indx': '',
+                'right_index': '',
                 'right_value': '',
                 'result': 'Left Only'})
     
     for indx2, in_text2 in enumerate(in_texts_2):
-        if is_match_texts_2(indx2):
+        if is_match_texts_2[indx2]:
             continue
         result_lines.append({
             'left_index': '',
             'left_value': '',
-            'right_indx': indx2,
+            'right_index': indx2,
             'right_value': in_text2,
             'result': 'Right Only'})
     
-    for result_line in result_lines:
-        print(result_line)
+    print_results(
+        ['left_index', 'left_value', 'right_index', 'right_value', 'result'],
+        result_lines)
 
+def print_results(columns, results):
+    table = texttable.Texttable()
+    # 書式を左上詰め
+    table.set_cols_align(['l' for _ in columns])
+    table.set_cols_valign(['t' for _ in columns])
+    # 
+    results_for_print = []
+    results_for_print.append(columns)
+    for result in results:
+        l = []
+        for column in columns:
+            l.append(result.get(column))
+        results_for_print.append(l)
+    # 
+    table.add_rows(results_for_print)
+    print(table.draw())
 
 
 if __name__ == '__main__':
